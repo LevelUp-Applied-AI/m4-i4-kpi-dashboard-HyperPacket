@@ -47,16 +47,20 @@ def extract_data(engine):
     for table in tables:
         data_dict[table] = pd.read_sql_table(table, engine)
     
-    # Filtering: Remove cancelled orders
+    # 1. Fix: Handle NULL city values
+    data_dict['customers']['city'] = data_dict['customers']['city'].fillna('Unknown')
+
+    # 2. Fix: Remove cancelled orders
     data_dict['orders'] = data_dict['orders'][data_dict['orders']['status'] != 'cancelled']
     
-    # Filtering: Remove suspicious quantities (> 100)
+    # 3. Fix: Remove suspicious quantities (> 100)
     data_dict['order_items'] = data_dict['order_items'][data_dict['order_items']['quantity'] <= 100]
     
     # Ensure order_items only are for non-cancelled orders
     data_dict['order_items'] = data_dict['order_items'][data_dict['order_items']['order_id'].isin(data_dict['orders']['order_id'])]
     
     return data_dict
+
 
 
 def compute_kpis(data_dict):
